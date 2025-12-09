@@ -1,7 +1,7 @@
-import requests
 from bs4 import BeautifulSoup
 
-def extract_notice(html_content):
+#处理content中的信息
+def process_notice(html_content):
     soup = BeautifulSoup(html_content, "html.parser")
     notice_data = []
     notice_items = soup.select("ul.list-gl > li")
@@ -52,3 +52,7 @@ def extract_notice(html_content):
     
     #返回
     return notice_data
+
+#导出为csv文件
+def output_as_csv():
+    pass
