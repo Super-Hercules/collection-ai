@@ -1,4 +1,9 @@
 from bs4 import BeautifulSoup
+from random_headers_pool import get_random_headers
+from extractor import JWC_base_url
+import os
+import csv
+import requests
 
 #处理content中的信息
 def process_notice(html_content):
@@ -54,5 +59,42 @@ def process_notice(html_content):
     return notice_data
 
 #导出为csv文件
-def output_as_csv():
-    pass
+def output_as_csv(notices, filename = "FZU_JWC_notices.csv"):
+    fieldnames = ["序号", "日期", "通知部门", "标题", "链接", "附件"]
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    filepath = os.path.join(current_dir, filename)
+    with open(filepath, "w",encoding = "utf-8") as csv_file:
+        writer = csv.DictWriter(csv_file, fieldnames = fieldnames)
+        writer.writeheader()
+        
+        for i, notice in enumerate(notices, 1):
+            writer.writerow({
+                "序号": notice["date"],
+                "日期": notice["date"],
+                "通知部门": notice["category"],
+                "标题": notice["title"],
+                "链接": notice["link"]
+                "附件":             ##记得搞哦
+            })
+
+#偷走通知里的附件
+def download_attachment_file(href):
+    headers = get_random_headers()
+    response = requests.get(href, headers = headers)
+    soup = BeautifulSoup(response.content, "html.parser")
+    attachment = soup.find("ul", style = "list-style-type:none;")
+    if attachment:
+        li = attachment.get("li", "")
+        a = li.find("a")
+        attachment_name = a.get_text(strip = True)
+        attachment_href = JWC_base_url + a.get("href", "")
+        span = li.find("span", "")
+        attachment_download_time = span.get_text(strip = True)
+        attachment_data = {
+            "名称": attachment_name,
+            "下载链接": attachment_href,
+            "下载次数": attachment_download_time
+        }
+        download_file = requests.get(attachment_href)
+    else:
+        return None
