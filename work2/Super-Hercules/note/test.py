@@ -26,7 +26,7 @@ from bs4 import BeautifulSoup
 
 
 #偷附件
-response = requests.get("https://jwch.fzu.edu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1744984858&wbfileid=16732856")
-# print(response.content)
-with open("2025-2026学年各学院转专业实施细则.pdf", "wb") as file:
-    file.write(response.content)
+# response = requests.get("https://jwch.fzu.edu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1744984858&wbfileid=16732856")
+# # print(response.content)
+# with open("2025-2026学年各学院转专业实施细则.pdf", "wb") as file:
+#     file.write(response.content)

@@ -66,23 +66,24 @@ def output_as_csv(notices, filename = "FZU_JWC_notices.csv"):
     with open(filepath, "w",encoding = "utf-8") as csv_file:
         writer = csv.DictWriter(csv_file, fieldnames = fieldnames)
         writer.writeheader()
-        
+
         for i, notice in enumerate(notices, 1):
             writer.writerow({
-                "序号": notice["date"],
+                "序号": i,
                 "日期": notice["date"],
                 "通知部门": notice["category"],
                 "标题": notice["title"],
-                "链接": notice["link"]
-                "附件":             ##记得搞哦
+                "链接": notice["link"],
+                "附件": i           ##记得搞哦
             })
 
-#偷走通知里的附件
+#偷走通知里的附件，返回附件信息
 def download_attachment_file(href):
     headers = get_random_headers()
     response = requests.get(href, headers = headers)
     soup = BeautifulSoup(response.content, "html.parser")
     attachment = soup.find("ul", style = "list-style-type:none;")
+
     if attachment:
         li = attachment.get("li", "")
         a = li.find("a")
@@ -90,11 +91,20 @@ def download_attachment_file(href):
         attachment_href = JWC_base_url + a.get("href", "")
         span = li.find("span", "")
         attachment_download_time = span.get_text(strip = True)
+
+        download_file = requests.get(attachment_href)
+        script_root = os.path.dirname(os.path.abspath(__file__))
+        subdir_path = os.path.join(script_root, "attachment")
+        filepath = os.path.join(subdir_path, attachment_name)
+        with open(filepath, "wb") as file:
+            file.write(download_file.content)
+        
         attachment_data = {
             "名称": attachment_name,
             "下载链接": attachment_href,
-            "下载次数": attachment_download_time
+            "下载次数": attachment_download_time,
+            "地址": filepath
         }
-        download_file = requests.get(attachment_href)
+        return attachment_data
     else:
         return None
