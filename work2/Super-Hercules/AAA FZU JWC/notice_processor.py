@@ -49,17 +49,17 @@ def process_notice(html_content):
 
         #整合
         notice_data.append({
-            "date": date,
-            "category": category,
-            "title": title,
-            "link": href
+            "日期": date,
+            "通知部门": category,
+            "标题": title,
+            "链接": href
         })
     
     #返回
     return notice_data
 
 #导出为csv文件
-def output_as_csv(notices, filename = "FZU_JWC_notices.csv"):
+def output_as_csv(notices, attachment_name, filename = "FZU_JWC_notices.csv"):
     fieldnames = ["序号", "日期", "通知部门", "标题", "链接", "附件"]
     current_dir = os.path.dirname(os.path.abspath(__file__))
     filepath = os.path.join(current_dir, filename)
@@ -74,7 +74,7 @@ def output_as_csv(notices, filename = "FZU_JWC_notices.csv"):
                 "通知部门": notice["category"],
                 "标题": notice["title"],
                 "链接": notice["link"],
-                "附件": i           ##记得搞哦
+                "附件": attachment_name
             })
 
 #偷走通知里的附件，返回附件信息
