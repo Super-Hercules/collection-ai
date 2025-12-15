@@ -1,13 +1,12 @@
 from bs4 import BeautifulSoup
 from random_headers_pool import get_random_headers
-from extractor import JWC_base_url
+from main import JWC_base_url
 import os
 import csv
 import requests
 
 #处理content中的信息
-def process_notice(html_content):
-    soup = BeautifulSoup(html_content, "html.parser")
+def process_notice(soup):
     notice_data = []
     notice_items = soup.select("ul.list-gl > li")
     for item in notice_items:
@@ -47,35 +46,63 @@ def process_notice(html_content):
         else:
             category = ""
 
-        #整合
+        #如果有附件则提取附件并整合信息
+        attachment_data = download_attachment_file(href)
         notice_data.append({
             "日期": date,
             "通知部门": category,
             "标题": title,
-            "链接": href
+            "链接": href,
+            "附件": attachment_data.get("名称", ""),
+            "下载链接": attachment_data.get("下载链接", ""),
+            "下载次数": attachment_data.get("下载次数", "")
         })
-    
+
     #返回
     return notice_data
 
 #导出为csv文件
-def output_as_csv(notices, attachment_name, filename = "FZU_JWC_notices.csv"):
-    fieldnames = ["序号", "日期", "通知部门", "标题", "链接", "附件"]
+def output_as_csv(notice_data, filename = "FZU_JWC_notices.csv"):
     current_dir = os.path.dirname(os.path.abspath(__file__))
     filepath = os.path.join(current_dir, filename)
-    with open(filepath, "w",encoding = "utf-8") as csv_file:
-        writer = csv.DictWriter(csv_file, fieldnames = fieldnames)
-        writer.writeheader()
+    fieldnames = ["序号", "日期", "通知部门", "标题", "链接", "附件", "下载链接", "下载次数"]
+    file_exists = os.path.exists(filepath)
 
-        for i, notice in enumerate(notices, 1):
-            writer.writerow({
+    #获取当前最大序号
+    start_index = 1
+    if file_exists:
+        try:
+            #只读模式"r"
+            with open(filepath, "r", encoding="utf-8") as csv_file:
+                reader = csv.DictReader(csv_file)
+                existing_rows = list(reader)
+                if existing_rows:
+                    max_index = max([int(row["序号"]) for row in existing_rows if row["序号"].isdigit()], default=0)
+                    start_index = max_index + 1
+        except:
+            start_index = 1
+    
+    #追加写入"a"
+    with open(filepath, "a", encoding="utf-8", newline="") as csv_file:
+        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+        
+        #如果文件不存在或为空，写入表头
+        if not file_exists or csv_file.tell() == 0:
+            writer.writeheader()
+
+        #写入所有数据
+        for i, notice in enumerate(notice_data, start=start_index):
+            row = {
                 "序号": i,
-                "日期": notice["date"],
-                "通知部门": notice["category"],
-                "标题": notice["title"],
-                "链接": notice["link"],
-                "附件": attachment_name
-            })
+                "日期": notice.get("日期", ""),
+                "通知部门": notice.get("通知部门", ""),
+                "标题": notice.get("标题", ""),
+                "链接": notice.get("链接", ""),
+                "附件": notice.get("附件", ""),
+                "下载链接": notice.get("下载链接", ""),
+                "下载次数": notice.get("下载次数", "")
+            }
+            writer.writerow(row)
 
 #偷走通知里的附件，返回附件信息
 def download_attachment_file(href):
@@ -102,8 +129,7 @@ def download_attachment_file(href):
         attachment_data = {
             "名称": attachment_name,
             "下载链接": attachment_href,
-            "下载次数": attachment_download_time,
-            "地址": filepath
+            "下载次数": attachment_download_time
         }
         return attachment_data
     else:

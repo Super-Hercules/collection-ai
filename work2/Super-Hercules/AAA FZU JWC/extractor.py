@@ -1,12 +1,11 @@
 import requests
 from random_headers_pool import get_random_headers
-
-JWC_base_url = "https://jwch.fzu.edu.cn"
+from main import JWC_base_url
 
 #爬取通知列表页面代码
-def extract_the_first_notice_page():
+def extract_notice_page(current_page_url):
     headers = get_random_headers()
-    response = requests.get(JWC_base_url + "/jxtz.htm", headers = headers)
+    response = requests.get(current_page_url, headers = headers)
     return response.content
 
 #翻页,页面上有一个"下一页"按钮哦
