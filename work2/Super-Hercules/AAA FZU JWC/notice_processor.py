@@ -139,7 +139,7 @@ def download_attachment_file(href):
                 #自动创建目录
                 os.makedirs(subdir_path, exist_ok=True)
 
-                for i, li in li_items:
+                for i, li in enumerate(li_items, 1):
                     a = li.find("a")
                     span = li.find("span")
 
@@ -175,8 +175,10 @@ def download_attachment_file(href):
                     "状态": "；".join(attachment_files)
                 }
                 return attachment_data
+            else:
+                return {}
         else:
-            return None
+            return {}
     except Exception as e:
         print(f"处理附件时发生错误: {e}")
 
