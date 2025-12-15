@@ -1,0 +1,1 @@
+JWC_base_url = "https://jwch.fzu.edu.cn"

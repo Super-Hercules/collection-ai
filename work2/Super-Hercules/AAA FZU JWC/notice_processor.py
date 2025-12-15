@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 from random_headers_pool import get_random_headers
-from main import JWC_base_url
+from data import JWC_base_url
 import os
 import csv
 import requests
@@ -31,9 +31,9 @@ def process_notice(soup):
             href = link_tag.get("href", "").strip()
             if href and not href.startswith(("http://", "https://")):
                 if href.startswith("/"):
-                    href = f"https://jwch.fzu.edu.cn{href}"
+                    href = JWC_base_url + href
                 else:
-                    href = f"https://jwch.fzu.edu.cn/{href}"
+                    href = JWC_base_url + f"/{href}"
         else:
             title = ""
             href = ""
@@ -48,15 +48,27 @@ def process_notice(soup):
 
         #如果有附件则提取附件并整合信息
         attachment_data = download_attachment_file(href)
-        notice_data.append({
-            "日期": date,
-            "通知部门": category,
-            "标题": title,
-            "链接": href,
-            "附件": attachment_data.get("名称", ""),
-            "下载链接": attachment_data.get("下载链接", ""),
-            "下载次数": attachment_data.get("下载次数", "")
-        })
+
+        if attachment_data and attachment_data.get("名称"):
+            notice_data.append({
+                "日期": date,
+                "通知部门": category,
+                "标题": title,
+                "链接": href,
+                "附件": attachment_data.get("名称", ""),
+                "下载链接": attachment_data.get("下载链接", ""),
+                "下载次数": attachment_data.get("下载次数", "")
+            })
+        else:
+            notice_data.append({
+                "日期": date,
+                "通知部门": category,
+                "标题": title,
+                "链接": href,
+                "附件": "",
+                "下载链接": "",
+                "下载次数": ""
+            })
 
     #返回
     return notice_data
@@ -106,31 +118,66 @@ def output_as_csv(notice_data, filename = "FZU_JWC_notices.csv"):
 
 #偷走通知里的附件，返回附件信息
 def download_attachment_file(href):
-    headers = get_random_headers()
-    response = requests.get(href, headers = headers)
-    soup = BeautifulSoup(response.content, "html.parser")
-    attachment = soup.find("ul", style = "list-style-type:none;")
+    try:
+        headers = get_random_headers()
+        response = requests.get(href, headers = headers)
+        soup = BeautifulSoup(response.content, "html.parser")
+        attachment = soup.find("ul", style = "list-style-type:none;")
 
-    if attachment:
-        li = attachment.get("li", "")
-        a = li.find("a")
-        attachment_name = a.get_text(strip = True)
-        attachment_href = JWC_base_url + a.get("href", "")
-        span = li.find("span", "")
-        attachment_download_time = span.get_text(strip = True)
+        if attachment:
+            li_items = attachment.find_all("li")
 
-        download_file = requests.get(attachment_href)
-        script_root = os.path.dirname(os.path.abspath(__file__))
-        subdir_path = os.path.join(script_root, "attachment")
-        filepath = os.path.join(subdir_path, attachment_name)
-        with open(filepath, "wb") as file:
-            file.write(download_file.content)
-        
-        attachment_data = {
-            "名称": attachment_name,
-            "下载链接": attachment_href,
-            "下载次数": attachment_download_time
-        }
-        return attachment_data
-    else:
-        return None
+            if li_items:
+                attachment_names = []
+                attachment_hrefs = []
+                attachment_download_times = []
+                attachment_files = []
+
+                #确保附件目录存在
+                script_root = os.path.dirname(os.path.abspath(__file__))
+                subdir_path = os.path.join(script_root, "attachment")
+                #自动创建目录
+                os.makedirs(subdir_path, exist_ok=True)
+
+                for i, li in li_items:
+                    a = li.find("a")
+                    span = li.find("span")
+
+                    if a:
+                        attachment_name = a.get_text(strip = True)
+                        attachment_names.append(attachment_name)
+
+                        attachment_href = a.get("href", "")
+                        if attachment_href and not attachment_href.startswith(("http://", "https://")):
+                            if attachment_href.startswith("/"):
+                                attachment_href = JWC_base_url + attachment_href
+                            else:
+                                attachment_href = JWC_base_url + f"/{attachment_href}"
+                        attachment_hrefs.append(attachment_href)
+
+                        attachment_download_time = span.get_text(strip = True) if span else "0"
+                        attachment_download_times.append(attachment_download_time)
+
+                        try:
+                            filepath = os.path.join(subdir_path, attachment_name)
+
+                            download_response = requests.get(attachment_href)
+                            with open(filepath, "wb") as file:
+                                file.write(download_response.content)
+                            attachment_files.append("下载成功")
+                        except Exception:
+                            attachment_files.append("下载失败")
+                
+                attachment_data = {
+                    "名称": "；".join(attachment_names),
+                    "下载链接": "；".join(attachment_hrefs),
+                    "下载次数": "；".join(attachment_download_times),
+                    "状态": "；".join(attachment_files)
+                }
+                return attachment_data
+        else:
+            return None
+    except Exception as e:
+        print(f"处理附件时发生错误: {e}")
+
+    return {}

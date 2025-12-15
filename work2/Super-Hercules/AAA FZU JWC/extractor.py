@@ -1,6 +1,6 @@
 import requests
 from random_headers_pool import get_random_headers
-from main import JWC_base_url
+from data import JWC_base_url
 
 #爬取通知列表页面代码
 def extract_notice_page(current_page_url):
