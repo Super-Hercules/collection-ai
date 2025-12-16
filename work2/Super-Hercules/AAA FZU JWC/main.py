@@ -20,7 +20,8 @@ def main():
         soup = BeautifulSoup(current_page_content, "html.parser")
         notice_data = process_notice(soup)
         output_as_csv(notice_data)
-        time.sleep(1)
+        counter += 1
+        # time.sleep(1)
 
 if __name__ == "__main__":
     main()
