@@ -15,6 +15,9 @@ def get_next_page(soup):
         next_page_href = next_page_button.find("a")
         if next_page_href:
             href = next_page_href.get("href")
-            return JWC_base_url + href
+            if href.startwith("/"):
+                return JWC_base_url + href
+            else:
+                return JWC_base_url + "/" + href
     else:
         return None
