@@ -1,0 +1,21 @@
+questions.csv
+
+question_id: 问题ID
+
+question_title: 问题标题
+
+question_content: 问题描述
+
+
+answers.csv
+
+question_id: 对应的问题ID
+
+answer_content: 回答内容
+
+
+comments.csv
+
+question_id: 对应的回答ID
+
+content: 评论内容

@@ -96,7 +96,7 @@ def output_as_csv(notice_data, filename = "FZU_JWC_notices.csv"):
     
     #追加写入"a"
     with open(filepath, "a", encoding="utf-8", newline="") as csv_file:
-        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+        writer = csv.DictWriter(csv_file, fieldnames = fieldnames)
         
         #如果文件不存在或为空，写入表头
         if not file_exists or csv_file.tell() == 0:

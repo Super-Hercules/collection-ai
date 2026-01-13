@@ -1,1 +1,1 @@
-Base_url = "https://www.zhihu.com/"
+Base_url = "https://www.zhihu.com"
