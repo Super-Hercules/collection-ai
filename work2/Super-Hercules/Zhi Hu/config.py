@@ -24,4 +24,3 @@ def create_chrome_options():
     #chrome_options.add_argument()
 
     return chrome_options
-

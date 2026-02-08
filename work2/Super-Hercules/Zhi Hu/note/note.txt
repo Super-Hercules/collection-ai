@@ -19,3 +19,5 @@ comments.csv
 question_id: 对应的回答ID
 
 content: 评论内容
+
+我暂时搁置了提取评论的部分和保存cookie再注入的部分，记得补，不然纯狗屎
