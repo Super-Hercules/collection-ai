@@ -3,7 +3,7 @@ from data import application_pdf_url
 from data import href
 from bs4 import BeautifulSoup
 import requests
-import json
+import os
 
 def requests_and_parse_data(url, json, headers):
     try:
@@ -19,12 +19,29 @@ def requests_and_parse_data(url, json, headers):
         data = response.json()
         projects = data["rows"]
 
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        subdir_path = os.path.join(script_dir, "attachment")
+
         json_data = []
         for item in projects:
             pro_name = item["programName"]
             pro_difficulty = item["difficulty"]
             tech_tag = item["techTag"]
-            pro_num = ["programCode"]
+            pro_num = item["programCode"]
+
+            attachment_id = item["orgProgramId"]
+            attachment_url = application_pdf_url + attachment_id
+            download_response = requests.get(attachment_url)
+
+            try:
+                filepath = os.path.join(subdir_path, pro_name)
+
+                download_response = requests.get(attachment_url)
+                with open(filepath, "wb") as file:
+                    file.write(download_response.content)
+            except Exception as e:
+                print(f"下载失败：{e}")
+
             # href = pro_url + pro_num
             
             payload = {
@@ -45,10 +62,10 @@ def requests_and_parse_data(url, json, headers):
 
             # output_requirement = []
             output_requirement = ""
-            for i in range(1, 4):
+            for i in range(1, len(outputrequirement)):
                 # output_requirement.append(outputrequirement[i]["title"])
                 output_requirement += outputrequirement[i]["title"]
-            
+
             pro_data = {
                 "project_name": pro_name,
                 "project_difficulty": pro_difficulty,
@@ -59,7 +76,11 @@ def requests_and_parse_data(url, json, headers):
 
             json_data.append(pro_data)
 
-        return json_data
+        file_path = os.path.join(script_dir, "data.json")
+
+        json_str = json.dumps(json_data, ensure_ascii = False, indent = 2)#ensure_ascii不将汉文字符转化为ascii码，确保正确输出；indent空格缩进
+        with open(file_path, "w", encoding = "utf-8") as json_file:
+            json_file.write(json_str)
         
     except Exception as exp:
         print(exp)
