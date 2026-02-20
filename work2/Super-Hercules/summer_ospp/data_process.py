@@ -42,10 +42,8 @@ def requests_and_parse_data(url, json_payload, headers):
             pro_discription = BeautifulSoup(pro_discription_json, "html.parser").text
             outputrequirement = data["outputRequirement"]
 
-            application_pdf_id = data["orgProgramId"]
-            str_id = str(application_pdf_id)
-            pdf_url = application_pdf_url + str_id
-            output_application_pdf(str_id, pdf_url)
+            application_pdf_id = str(data["orgProgramId"])
+            output_application_pdf(application_pdf_id)
 
             # output_requirement = []
             output_requirement = ""

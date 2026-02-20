@@ -1,3 +1,5 @@
+from headers_and_payload import application_headers
+from data import application_pdf_url
 import requests
 import json
 import os
@@ -7,11 +9,16 @@ subdir_path = os.path.join(script_dir, "application_pdf")
 file_path = os.path.join(script_dir, "data.json")
 os.makedirs(subdir_path, exist_ok = True)
 
-def output_application_pdf(str_id, application_pdf_url):
+def output_application_pdf(application_id):
     try:
-        filepath = os.path.join(subdir_path, str_id + ".pdf")
+        filepath = os.path.join(subdir_path, application_id + ".pdf")
 
-        download_response = requests.get(application_pdf_url)
+        application_pdf_id_url = application_pdf_url + application_id
+        url = "https://summer-ospp.ac.cn/api/publicApplication"
+        headers = application_headers(application_pdf_id_url)
+        payload = {"proId": f"{application_id}"}
+        download_response = requests.post(url = url, headers = headers, json = payload)
+        print(f"download_response: {download_response.content}")
         with open(filepath, "wb") as file:
             file.write(download_response.content)
     except Exception as e:
